@@ -263,19 +263,15 @@ for sublink in results:
     print("%r fetched in %ss" % (sublink, time.time() - start))
     
 # Check if number of files match len(thread_link_list), if not, find missing and repeat
-import bbsapp_missing_file
-import bbsapp_missing_eggs
+import exception_handler
 subfiles_folder_path = os.path.normpath(work_folder+"subpost/")
 n_output = len(os.listdir(subfiles_folder_path))
 n_input = len(thread_link_list)
 
 while(n_output != n_input):
-    bbsapp_missing_file.find_missing()
-    bbsapp_missing_eggs.missing_file_repeat()
+    exception_handler.find_missing(work_folder)
+    exception_handler.missing_file_repeat(work_folder,payload)
     n_output = len(os.listdir(subfiles_folder_path))
-
-
-
 #####################################################################
 ###################End Multi-thread processer #######################
 #####################################################################    
