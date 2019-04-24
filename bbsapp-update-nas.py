@@ -6,13 +6,13 @@ Created on Fri Dec 16 20:16:43 2016
 
 @author: lzhan
 """
-#This is the eggplant updater based on multi-tread-egg-quotefix.py
+#This is the forum dataminer based on previous multi-thread implementation
 #Process Flow
-# 1. Initiation
-# 2. Look up previous title table determine break condition
-# 3. Look up title list, get a list of threads that needs to pull data
-# 4. Subpost Engine
-# 5. Subpost query with multipost processer
+# 1. Initiation;
+# 2. Look up previous indexed titles table determine break condition;
+# 3. Look up title list, get a list of threads that needs to pull data;
+# 4. Import and define parameters for data query engine;
+# 5. Run the data query engine for each subpost with multi-thread processer
 # 6. Post query merge main table
 # 7. Post query merge update title table
 
@@ -23,53 +23,38 @@ Created on Fri Dec 16 20:16:43 2016
 # 1. subpost_spider.py
 # 2. bbsapp_missing_file.py
 # 3. bbsapp_missing_eggs.py
-
-
-
-
 #####################################################################
 ########################### 1. Initiation ###########################
 #####################################################################
 
-import requests, os, time
-from bs4 import BeautifulSoup
+import requests, os, time, sys
 import numpy as np
 import pandas as pd
+from bs4 import BeautifulSoup
 from multiprocessing.pool import ThreadPool
-
 from functools import partial
 
-#Parameters
+#Data paths:
+work_folder = "/share2/CACHEDEV1_DATA/Public/python_workfolder/egg_updater/data/"
+current_title_path = os.path.normpath(work_folder+"eggplant_titles.csv")
+update_title_path = os.path.normpath(work_folder+"eggplant_titles_update.csv")
+subpost_temp_path = work_folder+"subpost/"
+current_data_path = os.path.normpath(work_folder+"post_sum.csv")
+updated_data_path = os.path.normpath(work_folder+"post_sum_update.csv")
+
+#Parameters for log in website
+username = "username"
+password = "password"
 login_url = 'https://bbsapp.org/index.php?login/login'
 payload = {
-           'login': 'rayfalls', 
+           'login': username, 
            'register': '0',
-           'password': '5225496',
+           'password': password,
            'remember': '1',
            'cookie_check': '1',
            '_xfToken': ' ',
            'redirect': '/index.php'}
            
-proxies = {
-  'https': 'https://proxy.ch.intel.com:911',
-  'httpss': 'https://proxy.ch.intel.com:911',
-}
-
-#work_folder = "/share2/CACHEDEV1_DATA/Public/python_workfolder/egg_updater/data/"
-work_folder = "/home/lei/Documents/python_workfolder/egg_updater/data/"
-#work_folder = "C:/Users/Tony/Desktop/test/"
-
-
-
-#Save data link:
-current_title_path = os.path.normpath(work_folder+"eggplant_titles.csv")
-update_title_path = os.path.normpath(work_folder+"eggplant_titles_update.csv")
-subpost_temp_path = work_folder+"subpost/"
-
-current_data_path = os.path.normpath(work_folder+"post_sum.csv")
-updated_data_path = os.path.normpath(work_folder+"post_sum_update.csv")
-#Try Set Headers
-
 request_headers = {
                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
                    'Accept-Encoding' : 'gzip, deflate',
@@ -86,26 +71,24 @@ request_headers = {
                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36'
                    }
 
-
+#Log in website and validate session have logged in.
 s = requests.session()
 
-
 #Login attempt
-eggplant_try = s.post(login_url, data = payload, headers = request_headers)
+login_attempt = s.post(login_url, data = payload, headers = request_headers)
 
 
 #Access user file attempt
-eg_access = s.get("https://bbsapp.org/index.php?members/xau.5/")
+eg_access = s.get("https://bbsapp.org/index.php?members/5/")
 
 #Access post attempt
-eg_post = s.get('https://bbsapp.org/index.php?threads/%E6%9C%AC%E7%AB%99%E7%89%88%E8%A7%84.2/')
+eg_post = s.get('https://bbsapp.org/index.php?threads/2/')
 
-
-print(eggplant_try.status_code)
+print(login_attempt.status_code)
 print(eg_access.status_code)
 print(eg_post.status_code)
-#if eggplant_try.status_code == 403:
-#    sys.exit("aa! errors!")
+if login_attempt.status_code == 403:
+    sys.exit("Whoops, log in failed")
 
 #####################################################################
 ##### 2/3. Read Existing Title Data to determine new query range ####
@@ -113,35 +96,25 @@ print(eg_post.status_code)
 
 # Read last title file
 last_titles_pd = pd.read_csv(current_title_path, index_col = 0)
+
+# Get time stamp of newest post in previous query
 last_post_time = pd.to_datetime(last_titles_pd.exact_time).max()
-#last_post_time= pd.Timestamp('2017-01-12 05:11:08')
+
+# Start to query titles page
 
 eg_front = s.get('https://www.bbsapp.org/index.php?forums/2/')
 print(eg_front.status_code)
 
 soup_front = BeautifulSoup(eg_front.text, 'html.parser')
 
-thread_id = []
-title_text = []
-prefix_id = []
-author_id = []
-member_id = []
-post_time = []
-thread_link = []
-n_response = []
-n_views = []
-
-
+thread_id, title_text, title_text, prefix_id, author_id, member_id, post_time, thread_link, n_response, n_views = ([] for i in range(0,10))
 
 #Beautiful soup search and extract infomation on title page
-
 title_header = np.array([['thread_id','prefix_id','title_text','author_id','member_id','post_time','thread_link','n_response','n_views']])
-
 
 #Find out how many pages are there
 last_page_s = soup_front.find(class_='PageNav').get('data-last')
 last_page = int(last_page_s)
-#last_page = 1
 
 #Iterate over all pages to get a post list
 for pnum in range(1,last_page+1):
@@ -170,6 +143,7 @@ for pnum in range(1,last_page+1):
         else:
             title_nix_time = 'None'
         title_pd_time = pd.to_datetime(str(title_nix_time).encode('utf8'), unit='s')
+        # When post time is older than previous max, then data already exist in master file and query can stop
         time_stamp_check = last_post_time > title_pd_time
         
         #break statement identifier
@@ -194,7 +168,7 @@ for pnum in range(1,last_page+1):
     if exitFlag:
         break
 
-#Print out len of the lists
+#Print out len of the lists for sanity check
 print(len(thread_id))
 print(len(prefix_id))
 print(len(author_id))
@@ -203,6 +177,7 @@ print(len(post_time))
 print(len(thread_link))
 print(len(title_text))
 
+#Encoding to handle chinese characters
 thread_id_utf8 = [thread.encode('utf8') for thread in thread_id]
 prefix_id_utf8 = [prefix.encode('utf8') for prefix in prefix_id]
 author_id_utf8 = [author.encode('utf8') for author in author_id]
@@ -287,7 +262,7 @@ results = ThreadPool(5).imap_unordered(spider_partial, thread_link_list)
 for sublink in results:
     print("%r fetched in %ss" % (sublink, time.time() - start))
     
-# Check if number of files match len(thread_link_list), if not, find missnig and repeat
+# Check if number of files match len(thread_link_list), if not, find missing and repeat
 import bbsapp_missing_file
 import bbsapp_missing_eggs
 subfiles_folder_path = os.path.normpath(work_folder+"subpost/")
