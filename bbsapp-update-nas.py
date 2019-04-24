@@ -21,8 +21,7 @@ Created on Fri Dec 16 20:16:43 2016
 #####################################################################
 # Need the following .py script to run
 # 1. subpost_spider.py
-# 2. bbsapp_missing_file.py
-# 3. bbsapp_missing_eggs.py
+# 2. exception_handler.py
 #####################################################################
 ########################### 1. Initiation ###########################
 #####################################################################
@@ -257,7 +256,7 @@ import subpost_spider
 
 #multithread processer
 start = time.time()
-spider_partial = partial(subpost_spider.subpost_spider, thread_link_list = thread_link_list, title_pd = title_pd, subpost_temp_path = subpost_temp_path)
+spider_partial = partial(subpost_spider.subpost_spider, thread_link_list = thread_link_list, title_pd = title_pd, subpost_temp_path = subpost_temp_path, payload = payload)
 results = ThreadPool(5).imap_unordered(spider_partial, thread_link_list)
 for sublink in results:
     print("%r fetched in %ss" % (sublink, time.time() - start))
