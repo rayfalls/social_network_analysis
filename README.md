@@ -15,3 +15,7 @@ It uses
 (3) Word cloud generator
 
 Fun to visualize trendy topics
+
+(4) Unsupervised learning to cluster user by timezone from activity pattern
+
+Use k-means algorithm to cluster user by their activity pattern, the resulting groups can be interpreted as approximately their timezone.
