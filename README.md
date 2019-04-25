@@ -14,7 +14,7 @@ It uses
 
 (3) Word cloud generator
 
-Fun to visualize trendy topics
+Applying RNN based word-to-vector (pre-trained) to break down setences to words. Use the results to find trendy topics and generate wordcloud visulization
 
 (4) Unsupervised learning to cluster user by timezone from activity pattern
 
