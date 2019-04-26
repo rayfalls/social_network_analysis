@@ -1,4 +1,4 @@
-# website_text_analysis
+# Social Network Datamining and analysis
 
 This repositary is going to gather data from a public forum and do text analysis of data gathered. It is consisted with the following sections
 
@@ -10,7 +10,7 @@ This function is completed by bbsapp-update-nas.py and its dependency exception_
 
 (2) Data analysis for user social network graphs.
 
-It uses
+It uses graph theory and networkx package to visualize social network
 
 (3) Word cloud generator
 
