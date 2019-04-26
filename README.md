@@ -1,4 +1,4 @@
-# Social Network Datamining and analysis
+# Social Network Datamining and Analysis
 
 This repositary is going to gather data from a public forum and do text analysis of data gathered. It is consisted with the following sections
 
