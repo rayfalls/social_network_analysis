@@ -11,10 +11,10 @@ import numpy as np
 import networkx as nx
 
 
-raw_dt_path = "C:/Users/zhangle1/Syncplicity Folders/python/egg/post_sum.csv"
+raw_dt_path = "C:/Users/zhangle1/Syncplicity/python/egg/post_sum.csv"
 
 raw_norm_path = os.path.normpath(raw_dt_path)
-graph_output = os.path.normpath('C:/Users/zhangle1/Syncplicity Folders/python/egg/text2.gexf')
+graph_output = os.path.normpath('C:/Users/zhangle1/Syncplicity/python/egg/text2.gexf')
 
 data_df = pd.read_csv(raw_norm_path,index_col=0,dtype={'quoted_authors':str})
 
@@ -31,7 +31,7 @@ pair_stats = pair_stats_nw_filter.reset_index()
 pair_stats.rename( columns = {'author_id':'reply_fwd'}, inplace = True)
 
 
-# Single stats
+# Summerized stats by single user
 author_post_count = pair_stats.groupby(['post_author']).sum()
 author_post_count = author_post_count.reset_index()
 author_post_count.rename( columns = {'reply_fwd':'post_total'}, inplace = True)
@@ -63,10 +63,9 @@ merge['interaction_index'] = np.array(interaction_index)
 
 fwd_weight = (merge['reply_fwd_x']/merge['post_total_fwd']).tolist()
 bwd_weight = (merge['reply_bwd']/merge['post_total_bwd']).tolist()
-average_weight = ((merge['fwd_weight'] + merge['bwd_weight'])/2).tolist()
-
 merge['fwd_weight'] = np.array(fwd_weight)
 merge['bwd_weight'] = np.array(bwd_weight)
+average_weight = ((merge['fwd_weight'] + merge['bwd_weight'])/2).tolist()
 merge['average_weight'] = np.array(average_weight)
 
 
@@ -95,8 +94,7 @@ DG2.add_weighted_edges_from(edge_list)
 
 nx.write_gexf(DG2,graph_output)
 
-
-
+# With the network file created, additional network visualization is done in interactive open source tool gephi (gephi.org)
 
 
 
